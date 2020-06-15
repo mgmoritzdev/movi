@@ -48,6 +48,31 @@
                             :width 360
                             :alpha 0.8))
 
+(defun movi-set-webcam-params ()
+  (interactive)
+  (setq movi-webcam-params
+        (make-movi-webcam
+         :width (read-number "Width: " 360)
+         :alpha (read-number "Opacity: " 0.8))))
+
+(defun movi-set-with-slop ()
+  (interactive)
+  (let ((screen-rectangle
+         (mapcar 'string-to-number
+                 (split-string (shell-command-to-string "slop -n -f '%g'")
+                               "[x+]"))))
+    (setq movi-input-params (make-movi-input
+                             :width (let ((size (nth 0 screen-rectangle)))
+                                      (if (oddp size)
+                                          (+ 1 size)
+                                        size))
+                             :height (let ((size (nth 1 screen-rectangle)))
+                                       (if (oddp size)
+                                           (+ 1 size)
+                                         size))
+                             :x-offset (nth 2 screen-rectangle)
+                             :y-offset (nth 3 screen-rectangle)))))
+
 (defun movi-set-input (index)
   (setq movi-input-params (make-movi-input
                            :width (get-screen-width index)
@@ -256,6 +281,7 @@
   "Moritz video"
   ("1" movi-set-input-0 "Select first monitor")
   ("2" movi-set-input-1 "Select second monitor")
+  ("S" movi-set-with-slop "Select window to record")
   ("r" movi-record "Record half-screen")
   ("f" movi-fullscreen-record "Record fullscreen video")
   ("x" movi-dummy-camera-record "Record dummy camera")
