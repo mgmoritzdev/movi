@@ -293,6 +293,6 @@
   ("b" movi-browse "Open in nautilus")
   ("d" movi-dummy-camera-start "Start dummy camera")
   ("k" movi-dummy-camera-stop "Stop dummy camera")
-  ("q" quit-window "quit" :color blue))
+  ("q" nil "quit" :color blue))
 
 (provide 'movi)
