@@ -63,11 +63,11 @@
                                "[x+]"))))
     (setq movi-input-params (make-movi-input
                              :width (let ((size (nth 0 screen-rectangle)))
-                                      (if (oddp size)
+                                      (if (cl-oddp size)
                                           (+ 1 size)
                                         size))
                              :height (let ((size (nth 1 screen-rectangle)))
-                                       (if (oddp size)
+                                       (if (cl-oddp size)
                                            (+ 1 size)
                                          size))
                              :x-offset (nth 2 screen-rectangle)
