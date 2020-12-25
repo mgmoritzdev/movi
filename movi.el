@@ -183,6 +183,23 @@
                                                filename)))))
     (set-process-sentinel movi--process 'msg-me)))
 
+(defun movi-record-selection (&optional alpha)
+  "Record selected screen"
+  (interactive)
+  (let ((filename "/tmp/video.mp4")
+        (process-name "movi-window-record"))
+    (setq movi--process
+          (apply 'start-process
+                 (append `(,process-name
+                           ,process-name)
+                         (split-string (format "ffmpeg -f x11grab -s %sx%s -r 25 -i :0.0+%d,%d -vcodec libx264 %s"
+                                               (movi-input-width movi-input-params)
+                                               (movi-input-height movi-input-params)
+                                               (movi-input-x-offset movi-input-params)
+                                               (movi-input-y-offset movi-input-params)
+                                               filename)))))
+    (set-process-sentinel movi--process 'msg-me)))
+
 (defun movi-stop ()
   "stops the video recording process"
   (interactive)
@@ -282,7 +299,8 @@
   ("1" movi-set-input-0 "Select first monitor")
   ("2" movi-set-input-1 "Select second monitor")
   ("S" movi-set-with-slop "Select window to record")
-  ("r" movi-record "Record half-screen")
+  ("h" movi-record "Record half-screen")
+  ("r" movi-record-selection "Record selected window")
   ("f" movi-fullscreen-record "Record fullscreen video")
   ("x" movi-dummy-camera-record "Record dummy camera")
   ("c" movi-compress "Compress")
