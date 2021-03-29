@@ -64,11 +64,11 @@
     (setq movi-input-params (make-movi-input
                              :width (let ((size (nth 0 screen-rectangle)))
                                       (if (cl-oddp size)
-                                          (+ 1 size)
+                                          (- size 1)
                                         size))
                              :height (let ((size (nth 1 screen-rectangle)))
                                        (if (cl-oddp size)
-                                           (+ 1 size)
+                                           (- size 1)
                                          size))
                              :x-offset (nth 2 screen-rectangle)
                              :y-offset (nth 3 screen-rectangle)))))
@@ -183,7 +183,7 @@
                                                filename)))))
     (set-process-sentinel movi--process 'msg-me)))
 
-(defun movi-record-selection (&optional alpha)
+(defun movi-record-selection ()
   "Record selected screen"
   (interactive)
   (let ((filename "/tmp/video.mp4")
@@ -192,7 +192,7 @@
           (apply 'start-process
                  (append `(,process-name
                            ,process-name)
-                         (split-string (format "ffmpeg -f x11grab -s %sx%s -r 25 -i :0.0+%d,%d -vcodec libx264 %s"
+                         (split-string (format "ffmpeg -y -f x11grab -s %sx%s -r 25 -i :0.0+%d,%d -vcodec libx264 %s"
                                                (movi-input-width movi-input-params)
                                                (movi-input-height movi-input-params)
                                                (movi-input-x-offset movi-input-params)
@@ -245,7 +245,7 @@
 (defun movi-play ()
   "Plays the last saved video"
   (interactive)
-  (let ((filename "/tmp/video.mp4"))
+  (let ((filename "/tmp/sync.mp4"))
     (async-shell-command (format "mplayer %s" filename))))
 
 (defun movi-browse ()
