@@ -13,6 +13,10 @@
 
 ;; This is package to quickly create video using ffmpeg
 ;; from screen and webcam capture.
+;; External dependencies:
+;; - v4l2loopback
+;; - ffmpeg
+;; - slop
 
 (cl-defstruct movi-input
   width
