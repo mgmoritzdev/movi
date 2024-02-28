@@ -38,6 +38,13 @@
 (defvar movi-dummy-camera--process nil
   "variable to hold dummy camera process")
 
+(defvar movi--webcam-device "/dev/video0"
+  "variable to webcam device")
+
+(defvar movi-dummy-camera--device "/dev/video2"
+  "dummy-camera output device")
+
+
 (defvar movi-input-params (make-movi-input
                            :width 1920
                            :height 1080
@@ -119,7 +126,7 @@
 (defun movi-record (delay)
   "Start recording a video with audio and half of the screen"
   (interactive "p")
-  (let ((filename "/tmp/video.mkv")
+  (let ((filename "/tmp/video.mp4")
         (delay (if delay
                    delay
                  0))
@@ -164,7 +171,8 @@
           (apply 'start-process
                  (append `(,process-name
                            ,process-name)
-                         (split-string (format "ffmpeg -y -f alsa -i default -i /dev/video2 -c:a flac -qscale 0 -ss %s %s"
+                         (split-string (format "ffmpeg -y -f alsa -i default -i %s -c:a flac -qscale 0 -ss %s %s"
+                                               movi-dummy-camera--device
                                                delay
                                                filename)))))
     (set-process-sentinel movi--process 'msg-me)))
@@ -190,18 +198,21 @@
 (defun movi-record-selection ()
   "Record selected screen"
   (interactive)
-  (let ((filename "/tmp/video.mp4")
-        (process-name "movi-window-record"))
+  (let* ((filename "/tmp/video.mp4")
+         (process-name "movi-window-record")
+         (command (split-string
+                   (format "ffmpeg -y -f x11grab -s %sx%s -r 25 -i :0.0+%d,%d -vcodec libx264 %s"
+                           (movi-input-width movi-input-params)
+                           (movi-input-height movi-input-params)
+                           (movi-input-x-offset movi-input-params)
+                           (movi-input-y-offset movi-input-params)
+                           filename))))
+    (message (cl-reduce (lambda (a b) (format "%s %s" a b)) command))
     (setq movi--process
           (apply 'start-process
                  (append `(,process-name
                            ,process-name)
-                         (split-string (format "ffmpeg -y -f x11grab -s %sx%s -r 25 -i :0.0+%d,%d -vcodec libx264 %s"
-                                               (movi-input-width movi-input-params)
-                                               (movi-input-height movi-input-params)
-                                               (movi-input-x-offset movi-input-params)
-                                               (movi-input-y-offset movi-input-params)
-                                               filename)))))
+                         command)))
     (set-process-sentinel movi--process 'msg-me)))
 
 (defun movi-stop ()
@@ -214,7 +225,7 @@
   "Converts last saved video to the output format"
   (interactive)
   (let ((input-file "/tmp/video.mkv")
-        (output-file (concat "/tmp/video." (movi-output-extension movi-output-params)))
+        (output-file (concat "/tmp/compressed." (movi-output-extension movi-output-params)))
         (process-name "movi-compress"))
     (setq movi--process
           (apply 'start-process
@@ -229,7 +240,7 @@
 (defun movi-sync (&optional delay)
   "Synchronize audio and video"
   (interactive)
-  (let ((input-file "/tmp/video.mp4")
+  (let ((input-file "/tmp/compressed.mp4")
         (output-file (concat "/tmp/sync.mp4"))
         (delay (if delay
                    delay
@@ -271,13 +282,15 @@
           (apply 'start-process
                  (append `(,process-name
                            ,process-name)
-                         (split-string (format "ffmpeg -f alsa -i default -f x11grab -s %sx%s -r 25 -i :0.0+%d,%d -f video4linux2 -i /dev/video0 -filter_complex [2:v]scale=%d:-1%s[cam];[1:v][cam]overlay=W-w-8:H-h-8 -c:a flac -qscale 0 -vcodec rawvideo -pix_fmt yuv420p -threads 0 -f v4l2 /dev/video2"
+                         (split-string (format "ffmpeg -f alsa -thread_queue_size 1024 -i default -f x11grab -s %sx%s -r 25 -i :0.0+%d,%d -f video4linux2 -i %s -filter_complex [2:v]scale=%d:-1%s[cam];[1:v][cam]overlay=W-w-8:H-h-8 -c:a flac -qscale 0 -vcodec rawvideo -pix_fmt yuv420p -threads 0 -f v4l2 %s"
                                                (movi-input-width movi-input-params)
                                                (movi-input-height movi-input-params)
                                                (movi-input-x-offset movi-input-params)
                                                (movi-input-y-offset movi-input-params)
+                                               movi--webcam-device
                                                webcam-witdh
-                                               cam-alpha-options)))))
+                                               cam-alpha-options
+                                               movi-dummy-camera--device)))))
     (set-process-sentinel movi-dummy-camera--process 'msg-me)))
 
 (defun movi-dummy-camera-stop ()
